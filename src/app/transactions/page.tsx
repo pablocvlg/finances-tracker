@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CategoryManager from "@/components/CategoryManager";
+import RecurringManager from "@/components/RecurringManager";
 import TransactionFilters, { type Filters } from "@/components/TransactionFilters";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionList from "@/components/TransactionList";
-import type { Category, Transaction } from "@/lib/types";
+import type { Category, RecurringTransaction, Transaction } from "@/lib/types";
 import styles from "../shared.module.css";
 import pageStyles from "./page.module.css";
 
@@ -14,13 +15,21 @@ const emptyFilters: Filters = { type: "", category_id: "", from: "", to: "" };
 export default function Transactions() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [recurring, setRecurring] = useState<RecurringTransaction[]>([]);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const processedRef = useRef(false);
 
   const loadCategories = useCallback(() => {
     fetch("/api/categories")
       .then((res) => res.json())
       .then(setCategories);
+  }, []);
+
+  const loadRecurring = useCallback(() => {
+    fetch("/api/recurring")
+      .then((res) => res.json())
+      .then(setRecurring);
   }, []);
 
   const loadTransactions = useCallback(() => {
@@ -37,6 +46,17 @@ export default function Transactions() {
 
   useEffect(loadCategories, [loadCategories]);
   useEffect(loadTransactions, [loadTransactions]);
+  useEffect(loadRecurring, [loadRecurring]);
+
+  // Materialize due recurring rules once per visit, then refresh both lists.
+  useEffect(() => {
+    if (processedRef.current) return;
+    processedRef.current = true;
+    fetch("/api/recurring/process", { method: "POST" }).then(() => {
+      loadTransactions();
+      loadRecurring();
+    });
+  }, [loadTransactions, loadRecurring]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this transaction?")) return;
@@ -66,6 +86,15 @@ export default function Transactions() {
             transactions={transactions}
             onEdit={setEditing}
             onDelete={handleDelete}
+          />
+
+          <RecurringManager
+            categories={categories}
+            recurring={recurring}
+            onChanged={() => {
+              loadRecurring();
+              loadTransactions();
+            }}
           />
         </div>
 
