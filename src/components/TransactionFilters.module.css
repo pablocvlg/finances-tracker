@@ -1,0 +1,35 @@
+.wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.select,
+.date {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.separator {
+  color: var(--foreground-muted);
+  font-size: 0.85rem;
+}
+
+.clear {
+  font-size: 0.8rem;
+  color: var(--foreground-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.clear:hover {
+  color: var(--foreground);
+}

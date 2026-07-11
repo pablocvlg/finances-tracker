@@ -20,7 +20,18 @@
       "Bash(node seed-tmp.js)",
       "Bash(node drive-tmp.js)",
       "Bash(rm -f drive-tmp.js seed-tmp.js cleanup-tmp.js home-initial.png home-dkk.png home-today.png home-custom.png home-seeded.png)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(mkdir -p \"e:/Projects/Finances Tracker/src/app/api/categories/[id]\" \"e:/Projects/Finances Tracker/src/app/api/transactions/[id]\")",
+      "Bash(tail -100 /tmp/dev.log)",
+      "Read(//tmp/**)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s http://localhost:3000/api/categories)",
+      "Bash(curl -s http://localhost:3000/api/transactions)",
+      "Bash(node drive-tmp2.js)",
+      "Bash(rm -f drive-tmp.js drive-tmp2.js seed-tmp.js cleanup-tmp.js tx-*.png home-*.png)"
+    ],
+    "additionalDirectories": [
+      "e:\\Projects\\Finances Tracker\\src\\app\\api\\categories"
     ]
   }
 }
