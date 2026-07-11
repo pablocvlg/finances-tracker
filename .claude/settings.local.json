@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(npm -v)",
+      "Bash(npx --yes create-next-app@latest . --typescript --eslint --app --src-dir --import-alias \"@/*\" --no-tailwind --use-npm)",
+      "Bash(npx --yes create-next-app@latest --help)",
+      "Bash(npx --yes create-next-app@latest finance-tracker-tmp --typescript --eslint --app --src-dir --import-alias \"@/*\" --no-tailwind --use-npm --disable-git)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(git add *)"
+    ]
+  }
+}
