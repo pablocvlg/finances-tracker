@@ -9,7 +9,18 @@
       "Bash(npm install *)",
       "Bash(npx tsc *)",
       "Bash(npm run *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Skill(dataviz)",
+      "Skill(dataviz:*)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(node \"C:\\\\Users\\\\pablo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\e--Projects-Finances-Tracker\\\\d1be4a37-1253-4207-98f7-8c0093937115\\\\scratchpad\\\\drive.js\")",
+      "Bash(node seed-tmp.js)",
+      "Bash(node drive-tmp.js)",
+      "Bash(rm -f drive-tmp.js seed-tmp.js cleanup-tmp.js home-initial.png home-dkk.png home-today.png home-custom.png home-seeded.png)",
+      "Bash(npm uninstall *)"
     ]
   }
 }

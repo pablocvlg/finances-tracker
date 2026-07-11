@@ -17,7 +17,13 @@ create table asset_snapshots (
 create table categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  type text not null check (type in ('income', 'expense'))
+  type text not null check (type in ('income', 'expense')),
+  parent_id uuid references categories(id) on delete set null
+);
+
+create table transaction_groups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null
 );
 
 create table transactions (
@@ -25,6 +31,7 @@ create table transactions (
   date date not null,
   type text not null check (type in ('income', 'expense')),
   category_id uuid references categories(id) on delete set null,
+  group_id uuid references transaction_groups(id) on delete set null,
   amount numeric not null,
   currency text not null check (currency in ('EUR', 'DKK')),
   description text,
@@ -57,3 +64,5 @@ create table goals (
 create index on asset_snapshots (asset_id, date);
 create index on transactions (date);
 create index on transactions (category_id);
+create index on transactions (group_id);
+create index on categories (parent_id);

@@ -13,3 +13,9 @@ export function formatCurrency(amount: number, currency: Currency): string {
     currency,
   }).format(amount);
 }
+
+export type CurrencyTotals = { EUR: number; DKK: number };
+
+export function sumInCurrency(totals: CurrencyTotals, display: Currency): number {
+  return convert(totals.EUR, "EUR", display) + convert(totals.DKK, "DKK", display);
+}
