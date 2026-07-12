@@ -7,6 +7,8 @@ const presets: { value: RangePreset; label: string }[] = [
   { value: "today", label: "Today" },
   { value: "week", label: "This week" },
   { value: "month", label: "This month" },
+  { value: "year", label: "This year" },
+  { value: "all", label: "All time" },
   { value: "custom", label: "Custom" },
 ];
 
