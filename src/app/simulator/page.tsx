@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import CurrencyToggle from "@/components/CurrencyToggle";
 import {
+  convert,
   formatCurrency,
   parseAmount,
   sumInCurrency,
@@ -67,6 +68,13 @@ export default function Simulator() {
   }, [lookback]);
 
   const today = new Date().toISOString().slice(0, 10);
+  const otherCurrency: Currency = currency === "EUR" ? "DKK" : "EUR";
+  // Results always show both currencies; amounts are in the input currency.
+  const both = (amount: number) =>
+    `${formatCurrency(amount, currency)} (${formatCurrency(
+      convert(amount, currency, otherCurrency),
+      otherCurrency
+    )})`;
   const netWorthDisplay = netWorth ? sumInCurrency(netWorth, currency) : 0;
   const startParsed = parseAmount(startOverride);
   const start = !isNaN(startParsed) ? startParsed : netWorthDisplay;
@@ -243,9 +251,12 @@ export default function Simulator() {
               <p className={pageStyles.resultValue}>
                 {formatCurrency(goalResult.perMonth, currency)} / month
               </p>
+              <p className={pageStyles.resultAlt}>
+                {formatCurrency(convert(goalResult.perMonth, currency, otherCurrency), otherCurrency)}{" "}
+                / month
+              </p>
               <p className={pageStyles.resultLine}>
-                {goalResult.months} months until the deadline, starting from{" "}
-                {formatCurrency(start, currency)}.
+                {goalResult.months} months until the deadline, starting from {both(start)}.
               </p>
             </>
           ))}
@@ -259,16 +270,15 @@ export default function Simulator() {
             <p className={pageStyles.resultLine}>Target is already covered by the starting amount.</p>
           ) : projectionResult.months === null ? (
             <p className={pageStyles.resultLine}>
-              Average savings over this period is{" "}
-              {formatCurrency(projectionResult.monthlyRate, currency)} / month — the target is not
-              reachable at the current rate.
+              Average savings over this period is {both(projectionResult.monthlyRate)} / month —
+              the target is not reachable at the current rate.
             </p>
           ) : (
             <>
               <p className={pageStyles.resultValue}>{projectionResult.date}</p>
               <p className={pageStyles.resultLine}>
                 About {projectionResult.months} months at the current rate of{" "}
-                {formatCurrency(projectionResult.monthlyRate, currency)} / month.
+                {both(projectionResult.monthlyRate)} / month.
               </p>
             </>
           ))}
@@ -281,11 +291,12 @@ export default function Simulator() {
               <p className={pageStyles.resultValue}>
                 {formatCurrency(planResult.final, currency)}
               </p>
+              <p className={pageStyles.resultAlt}>
+                {formatCurrency(convert(planResult.final, currency, otherCurrency), otherCurrency)}
+              </p>
               <p className={pageStyles.resultLine}>
-                After {planResult.months} months saving{" "}
-                {formatCurrency(planResult.monthly, currency)} / month you save{" "}
-                {formatCurrency(planResult.contributed, currency)}, on top of the{" "}
-                {formatCurrency(start, currency)} you start with.
+                After {planResult.months} months saving {both(planResult.monthly)} / month you
+                save {both(planResult.contributed)}, on top of the {both(start)} you start with.
               </p>
             </>
           ))}

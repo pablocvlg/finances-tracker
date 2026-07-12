@@ -84,7 +84,13 @@
   font-size: 2.25rem;
   font-weight: 650;
   letter-spacing: -0.02em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.resultAlt {
+  font-size: 1.1rem;
+  color: var(--foreground-muted);
+  margin-bottom: 0.6rem;
 }
 
 .resultLine {
