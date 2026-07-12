@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Category, Transaction, TransactionType } from "@/lib/types";
-import type { Currency } from "@/lib/currency";
+import { parseAmount, type Currency } from "@/lib/currency";
 import styles from "./TransactionForm.module.css";
 
 function today(): string {
@@ -50,11 +50,13 @@ export default function TransactionForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const amount = parseAmount(form.amount);
+    if (isNaN(amount)) return;
     const payload = {
       date: form.date,
       type: form.type,
       category_id: form.category_id || null,
-      amount: parseFloat(form.amount),
+      amount,
       currency: form.currency,
       description: form.description || null,
     };
@@ -109,9 +111,8 @@ export default function TransactionForm({
         ))}
       </select>
       <input
-        type="number"
-        step="0.01"
-        min="0"
+        type="text"
+        inputMode="decimal"
         className={styles.amount}
         placeholder="Amount"
         value={form.amount}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CurrencyToggle from "@/components/CurrencyToggle";
 import {
   formatCurrency,
+  parseAmount,
   sumInCurrency,
   type Currency,
   type CurrencyTotals,
@@ -53,8 +54,9 @@ export default function Simulator() {
 
   const today = new Date().toISOString().slice(0, 10);
   const netWorthDisplay = netWorth ? sumInCurrency(netWorth, currency) : 0;
-  const start = startOverride !== "" ? parseFloat(startOverride) : netWorthDisplay;
-  const targetValue = parseFloat(target);
+  const startParsed = parseAmount(startOverride);
+  const start = !isNaN(startParsed) ? startParsed : netWorthDisplay;
+  const targetValue = parseAmount(target);
 
   const goalResult = useMemo(() => {
     if (!targetValue || !deadline || deadline <= today) return null;
@@ -102,9 +104,8 @@ export default function Simulator() {
         <label className={pageStyles.field}>
           <span className={pageStyles.label}>Target amount ({currency})</span>
           <input
-            type="number"
-            step="0.01"
-            min="0"
+            type="text"
+            inputMode="decimal"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             placeholder="e.g. 50000"
@@ -114,8 +115,8 @@ export default function Simulator() {
         <label className={pageStyles.field}>
           <span className={pageStyles.label}>Starting amount ({currency})</span>
           <input
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={startOverride}
             onChange={(e) => setStartOverride(e.target.value)}
             placeholder={netWorth ? formatCurrency(netWorthDisplay, currency) : "…"}

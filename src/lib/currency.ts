@@ -21,6 +21,32 @@ export function formatCompact(value: number): string {
   return fmt.format(value);
 }
 
+// Accepts both "1.234,56" and "1,234.56" style input: when both separators
+// appear, the last one is the decimal mark; a lone repeated separator is
+// treated as thousands grouping.
+export function parseAmount(raw: string): number {
+  const s = raw.trim().replace(/\s/g, "");
+  if (s === "") return NaN;
+  const lastComma = s.lastIndexOf(",");
+  const lastDot = s.lastIndexOf(".");
+
+  let normalized: string;
+  if (lastComma !== -1 && lastDot !== -1) {
+    normalized =
+      lastComma > lastDot
+        ? s.replace(/\./g, "").replace(",", ".")
+        : s.replace(/,/g, "");
+  } else if (lastComma !== -1) {
+    normalized =
+      s.indexOf(",") === lastComma ? s.replace(",", ".") : s.replace(/,/g, "");
+  } else if (lastDot !== -1 && s.indexOf(".") !== lastDot) {
+    normalized = s.replace(/\./g, "");
+  } else {
+    normalized = s;
+  }
+  return parseFloat(normalized);
+}
+
 export type CurrencyTotals = { EUR: number; DKK: number };
 
 export function sumInCurrency(totals: CurrencyTotals, display: Currency): number {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Category, Frequency, RecurringTransaction } from "@/lib/types";
 import type { Currency } from "@/lib/currency";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, parseAmount } from "@/lib/currency";
 import styles from "./RecurringManager.module.css";
 import formStyles from "./TransactionForm.module.css";
 
@@ -49,10 +49,12 @@ export default function RecurringManager({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const amount = parseAmount(form.amount);
+    if (isNaN(amount)) return;
     const payload = {
       name: form.name.trim(),
       category_id: form.category_id,
-      amount: parseFloat(form.amount),
+      amount,
       currency: form.currency,
       frequency: form.frequency,
       next_date: form.next_date,
@@ -131,9 +133,8 @@ export default function RecurringManager({
           </optgroup>
         </select>
         <input
-          type="number"
-          step="0.01"
-          min="0"
+          type="text"
+          inputMode="decimal"
           className={formStyles.amount}
           placeholder="Amount"
           value={form.amount}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Asset, AssetType } from "@/lib/types";
 import type { Currency } from "@/lib/currency";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, parseAmount } from "@/lib/currency";
 import styles from "./AssetManager.module.css";
 import formStyles from "./TransactionForm.module.css";
 
@@ -41,10 +41,12 @@ export default function AssetManager({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const value = parseAmount(form.current_value);
+    if (isNaN(value)) return;
     const payload = {
       name: form.name.trim(),
       type: form.type,
-      current_value: parseFloat(form.current_value),
+      current_value: value,
       currency: form.currency,
     };
 
@@ -98,9 +100,8 @@ export default function AssetManager({
           ))}
         </select>
         <input
-          type="number"
-          step="0.01"
-          min="0"
+          type="text"
+          inputMode="decimal"
           className={formStyles.amount}
           placeholder="Value"
           value={form.current_value}
