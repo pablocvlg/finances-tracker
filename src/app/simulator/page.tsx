@@ -115,19 +115,19 @@ export default function Simulator() {
         </button>
         <button
           type="button"
-          className={mode === "projection" ? pageStyles.modeActive : pageStyles.mode}
-          onClick={() => setMode("projection")}
-          aria-pressed={mode === "projection"}
-        >
-          Projection
-        </button>
-        <button
-          type="button"
           className={mode === "plan" ? pageStyles.modeActive : pageStyles.mode}
           onClick={() => setMode("plan")}
           aria-pressed={mode === "plan"}
         >
           Savings plan
+        </button>
+        <button
+          type="button"
+          className={mode === "projection" ? pageStyles.modeActive : pageStyles.mode}
+          onClick={() => setMode("projection")}
+          aria-pressed={mode === "projection"}
+        >
+          Projection
         </button>
       </div>
 
