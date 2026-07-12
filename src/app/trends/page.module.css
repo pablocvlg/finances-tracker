@@ -1,9 +1,36 @@
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
 .spanRow {
   display: inline-flex;
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 1.75rem;
+}
+
+.customRange {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.customRange input {
+  font-size: 0.9rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.separator {
+  color: var(--foreground-muted);
+  font-size: 0.9rem;
 }
 
 .span,

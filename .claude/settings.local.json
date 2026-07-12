@@ -31,7 +31,8 @@
       "Bash(rm -f drive-tmp.js drive-tmp2.js seed-tmp.js cleanup-tmp.js tx-*.png home-*.png)",
       "Bash(mkdir -p \"e:/Projects/Finances Tracker/src/app/api/recurring/[id]\" \"e:/Projects/Finances Tracker/src/app/api/recurring/process\" \"e:/Projects/Finances Tracker/src/app/api/assets/[id]\" \"e:/Projects/Finances Tracker/src/app/api/savings-rate\" \"e:/Projects/Finances Tracker/src/app/api/trends\")",
       "Bash(git commit -q -m ' *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -s \"http://localhost:3000\" -o /dev/null -w \"\")"
     ],
     "additionalDirectories": [
       "e:\\Projects\\Finances Tracker\\src\\app\\api\\categories",

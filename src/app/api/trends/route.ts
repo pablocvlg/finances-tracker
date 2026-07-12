@@ -14,13 +14,30 @@ type MonthBucket = {
   categories: Map<string, CurrencyTotals>;
 };
 
-export async function GET(request: NextRequest) {
-  const monthsParam = parseInt(request.nextUrl.searchParams.get("months") ?? "6", 10);
-  const months = Math.min(Math.max(monthsParam, 1), 24);
+const MONTH_RE = /^\d{4}-\d{2}$/;
+const MAX_MONTHS = 60;
 
-  // Last N months including the current (partial) one.
-  const currentMonthStart = new Date().toISOString().slice(0, 7) + "-01";
-  const from = addMonths(currentMonthStart, -(months - 1));
+export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+  const fromParam = params.get("from");
+  const toParam = params.get("to");
+
+  let from: string;
+  let months: number;
+
+  if (fromParam && toParam && MONTH_RE.test(fromParam) && MONTH_RE.test(toParam) && fromParam <= toParam) {
+    // Explicit month range (YYYY-MM, inclusive).
+    from = fromParam + "-01";
+    const [fy, fm] = fromParam.split("-").map(Number);
+    const [ty, tm] = toParam.split("-").map(Number);
+    months = Math.min((ty - fy) * 12 + (tm - fm) + 1, MAX_MONTHS);
+  } else {
+    // Last N months including the current (partial) one.
+    const monthsParam = parseInt(params.get("months") ?? "6", 10);
+    months = Math.min(Math.max(monthsParam, 1), MAX_MONTHS);
+    const currentMonthStart = new Date().toISOString().slice(0, 7) + "-01";
+    from = addMonths(currentMonthStart, -(months - 1));
+  }
 
   const { data: transactions, error } = await supabase
     .from("transactions")
