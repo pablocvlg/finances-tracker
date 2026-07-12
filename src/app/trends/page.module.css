@@ -1,0 +1,30 @@
+.spanRow {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.span,
+.spanActive {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--foreground-muted);
+  cursor: pointer;
+}
+
+.span:hover {
+  color: var(--foreground);
+}
+
+.spanActive {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.chartSection {
+  margin-bottom: 2.5rem;
+}
