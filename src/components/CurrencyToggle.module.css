@@ -7,8 +7,8 @@
 
 .option,
 .active {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
   border: none;
   background: transparent;
   color: var(--foreground-muted);
@@ -22,4 +22,5 @@
 .active {
   background: var(--foreground);
   color: var(--background);
+  font-weight: 500;
 }

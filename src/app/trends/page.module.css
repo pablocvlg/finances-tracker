@@ -3,13 +3,13 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .span,
 .spanActive {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
   border: none;
   background: transparent;
   color: var(--foreground-muted);
@@ -23,8 +23,9 @@
 .spanActive {
   background: var(--foreground);
   color: var(--background);
+  font-weight: 500;
 }
 
 .chartSection {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.75rem;
 }
