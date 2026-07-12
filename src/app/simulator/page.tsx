@@ -13,13 +13,15 @@ import { addMonths } from "@/lib/recurrence";
 import styles from "../shared.module.css";
 import pageStyles from "./page.module.css";
 
-type Mode = "goal" | "projection";
+type Mode = "goal" | "projection" | "plan";
 
 type SavingsRate = {
   months: number;
   history: { month: string; net: CurrencyTotals }[];
   average: CurrencyTotals;
 };
+
+const MAX_LOOKBACK = 60;
 
 function monthsBetween(from: string, to: string): number {
   const [fy, fm, fd] = from.split("-").map(Number);
@@ -37,8 +39,19 @@ export default function Simulator() {
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [startOverride, setStartOverride] = useState("");
-  const [lookback, setLookback] = useState(6);
+
+  const [lookbackChoice, setLookbackChoice] = useState("6");
+  const [lookbackCustom, setLookbackCustom] = useState("");
   const [rate, setRate] = useState<SavingsRate | null>(null);
+
+  const [monthlySaving, setMonthlySaving] = useState("");
+  const [duration, setDuration] = useState("");
+  const [durationUnit, setDurationUnit] = useState<"months" | "years">("months");
+
+  const lookback =
+    lookbackChoice === "custom"
+      ? Math.min(Math.max(parseInt(lookbackCustom, 10) || 0, 0), MAX_LOOKBACK)
+      : Number(lookbackChoice);
 
   useEffect(() => {
     fetch("/api/net-worth")
@@ -47,6 +60,7 @@ export default function Simulator() {
   }, []);
 
   useEffect(() => {
+    if (lookback < 1) return;
     fetch(`/api/savings-rate?months=${lookback}`)
       .then((res) => res.json())
       .then(setRate);
@@ -74,6 +88,15 @@ export default function Simulator() {
     return { reached: false as const, monthlyRate, months, date: addMonths(today, months) };
   }, [targetValue, rate, start, currency, today]);
 
+  const planResult = useMemo(() => {
+    const monthly = parseAmount(monthlySaving);
+    const n = parseInt(duration, 10);
+    if (isNaN(monthly) || monthly <= 0 || isNaN(n) || n < 1) return null;
+    const months = durationUnit === "years" ? n * 12 : n;
+    const contributed = monthly * months;
+    return { months, monthly, contributed, final: start + contributed };
+  }, [monthlySaving, duration, durationUnit, start]);
+
   return (
     <main className={styles.main}>
       <div className={styles.headerRow}>
@@ -98,19 +121,63 @@ export default function Simulator() {
         >
           Projection
         </button>
+        <button
+          type="button"
+          className={mode === "plan" ? pageStyles.modeActive : pageStyles.mode}
+          onClick={() => setMode("plan")}
+          aria-pressed={mode === "plan"}
+        >
+          Savings plan
+        </button>
       </div>
 
       <div className={pageStyles.fields}>
-        <label className={pageStyles.field}>
-          <span className={pageStyles.label}>Target amount ({currency})</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-            placeholder="e.g. 50000"
-          />
-        </label>
+        {mode !== "plan" && (
+          <label className={pageStyles.field}>
+            <span className={pageStyles.label}>Target amount ({currency})</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              placeholder="e.g. 50000"
+            />
+          </label>
+        )}
+
+        {mode === "plan" && (
+          <>
+            <label className={pageStyles.field}>
+              <span className={pageStyles.label}>Saving per month ({currency})</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={monthlySaving}
+                onChange={(e) => setMonthlySaving(e.target.value)}
+                placeholder="e.g. 500"
+              />
+            </label>
+            <label className={pageStyles.field}>
+              <span className={pageStyles.label}>For how long</span>
+              <div className={pageStyles.inlinePair}>
+                <input
+                  type="number"
+                  min="1"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="e.g. 24"
+                />
+                <select
+                  value={durationUnit}
+                  onChange={(e) => setDurationUnit(e.target.value as "months" | "years")}
+                >
+                  <option value="months">months</option>
+                  <option value="years">years</option>
+                </select>
+              </div>
+            </label>
+          </>
+        )}
 
         <label className={pageStyles.field}>
           <span className={pageStyles.label}>Starting amount ({currency})</span>
@@ -124,7 +191,7 @@ export default function Simulator() {
           <span className={pageStyles.hint}>Blank uses current net worth</span>
         </label>
 
-        {mode === "goal" ? (
+        {mode === "goal" && (
           <label className={pageStyles.field}>
             <span className={pageStyles.label}>Deadline</span>
             <input
@@ -134,14 +201,33 @@ export default function Simulator() {
               onChange={(e) => setDeadline(e.target.value)}
             />
           </label>
-        ) : (
+        )}
+
+        {mode === "projection" && (
           <label className={pageStyles.field}>
             <span className={pageStyles.label}>Based on the last</span>
-            <select value={lookback} onChange={(e) => setLookback(Number(e.target.value))}>
-              <option value={3}>3 months</option>
-              <option value={6}>6 months</option>
-              <option value={12}>12 months</option>
-            </select>
+            <div className={pageStyles.inlinePair}>
+              <select
+                value={lookbackChoice}
+                onChange={(e) => setLookbackChoice(e.target.value)}
+              >
+                <option value="3">3 months</option>
+                <option value="6">6 months</option>
+                <option value="12">12 months</option>
+                <option value="24">24 months</option>
+                <option value="custom">Custom…</option>
+              </select>
+              {lookbackChoice === "custom" && (
+                <input
+                  type="number"
+                  min="1"
+                  max={MAX_LOOKBACK}
+                  value={lookbackCustom}
+                  onChange={(e) => setLookbackCustom(e.target.value)}
+                  placeholder="months"
+                />
+              )}
+            </div>
           </label>
         )}
       </div>
@@ -165,7 +251,9 @@ export default function Simulator() {
           ))}
 
         {mode === "projection" &&
-          (projectionResult === null ? (
+          (lookback < 1 ? (
+            <p className={styles.placeholder}>Enter a lookback period in months.</p>
+          ) : projectionResult === null ? (
             <p className={styles.placeholder}>Enter a target amount.</p>
           ) : projectionResult.reached ? (
             <p className={pageStyles.resultLine}>Target is already covered by the starting amount.</p>
@@ -181,6 +269,23 @@ export default function Simulator() {
               <p className={pageStyles.resultLine}>
                 About {projectionResult.months} months at the current rate of{" "}
                 {formatCurrency(projectionResult.monthlyRate, currency)} / month.
+              </p>
+            </>
+          ))}
+
+        {mode === "plan" &&
+          (planResult === null ? (
+            <p className={styles.placeholder}>Enter a monthly amount and a duration.</p>
+          ) : (
+            <>
+              <p className={pageStyles.resultValue}>
+                {formatCurrency(planResult.final, currency)}
+              </p>
+              <p className={pageStyles.resultLine}>
+                After {planResult.months} months saving{" "}
+                {formatCurrency(planResult.monthly, currency)} / month you save{" "}
+                {formatCurrency(planResult.contributed, currency)}, on top of the{" "}
+                {formatCurrency(start, currency)} you start with.
               </p>
             </>
           ))}

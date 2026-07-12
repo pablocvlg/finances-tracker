@@ -60,6 +60,21 @@
   color: var(--foreground-muted);
 }
 
+.inlinePair {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.inlinePair input,
+.inlinePair select {
+  width: auto;
+  min-width: 0;
+}
+
+.inlinePair input {
+  width: 110px;
+}
+
 .result {
   padding-top: 1.75rem;
   border-top: 1px solid var(--border);

@@ -5,7 +5,7 @@ import type { Currency, CurrencyTotals } from "@/lib/currency";
 
 export async function GET(request: NextRequest) {
   const monthsParam = parseInt(request.nextUrl.searchParams.get("months") ?? "6", 10);
-  const months = Math.min(Math.max(monthsParam, 1), 24);
+  const months = Math.min(Math.max(monthsParam, 1), 60);
 
   // Only complete months: from the 1st of (current month - N) through the last
   // day of the previous month, so a half-elapsed current month doesn't skew the rate.
