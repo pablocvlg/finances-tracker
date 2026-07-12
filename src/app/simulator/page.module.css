@@ -1,0 +1,76 @@
+.modes {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.mode,
+.modeActive {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--foreground-muted);
+  cursor: pointer;
+}
+
+.mode:hover {
+  color: var(--foreground);
+}
+
+.modeActive {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  color: var(--foreground-muted);
+}
+
+.field input,
+.field select {
+  font-size: 0.9rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--foreground);
+  width: 180px;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--foreground-muted);
+}
+
+.result {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.resultValue {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.resultLine {
+  font-size: 0.9rem;
+  color: var(--foreground-muted);
+}
