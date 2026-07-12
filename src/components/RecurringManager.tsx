@@ -116,21 +116,29 @@ export default function RecurringManager({
           onChange={(e) => setForm({ ...form, category_id: e.target.value })}
           required
         >
-          <option value="">Category…</option>
-          <optgroup label="Expense">
-            {expenseCategories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Income">
-            {incomeCategories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </optgroup>
+          {categories.length === 0 ? (
+            <option value="">No categories yet — create one first</option>
+          ) : (
+            <option value="">Category…</option>
+          )}
+          {expenseCategories.length > 0 && (
+            <optgroup label="Expense">
+              {expenseCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          {incomeCategories.length > 0 && (
+            <optgroup label="Income">
+              {incomeCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
         <input
           type="text"
