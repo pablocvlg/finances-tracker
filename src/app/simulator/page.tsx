@@ -49,6 +49,9 @@ export default function Simulator() {
   const [duration, setDuration] = useState("");
   const [durationUnit, setDurationUnit] = useState<"months" | "years">("months");
 
+  const [forward, setForward] = useState("12");
+  const [forwardUnit, setForwardUnit] = useState<"months" | "years">("months");
+
   const lookback =
     lookbackChoice === "custom"
       ? Math.min(Math.max(parseInt(lookbackCustom, 10) || 0, 0), MAX_LOOKBACK)
@@ -87,14 +90,20 @@ export default function Simulator() {
     return { reached: false as const, months, perMonth: (targetValue - start) / months };
   }, [targetValue, deadline, today, start]);
 
+  // No inputs beyond the two periods: starts from live net worth and the
+  // real savings rate, and projects that far ahead.
   const projectionResult = useMemo(() => {
-    if (!targetValue || !rate) return null;
-    if (targetValue <= start) return { reached: true as const };
+    const n = parseInt(forward, 10);
+    if (!rate || !netWorth || isNaN(n) || n < 1) return null;
+    const months = forwardUnit === "years" ? n * 12 : n;
     const monthlyRate = sumInCurrency(rate.average, currency);
-    if (monthlyRate <= 0) return { reached: false as const, monthlyRate, months: null };
-    const months = Math.ceil((targetValue - start) / monthlyRate);
-    return { reached: false as const, monthlyRate, months, date: addMonths(today, months) };
-  }, [targetValue, rate, start, currency, today]);
+    return {
+      months,
+      monthlyRate,
+      date: addMonths(today, months),
+      projected: sumInCurrency(netWorth, currency) + monthlyRate * months,
+    };
+  }, [forward, forwardUnit, rate, netWorth, currency, today]);
 
   const planResult = useMemo(() => {
     const monthly = parseAmount(monthlySaving);
@@ -140,7 +149,7 @@ export default function Simulator() {
       </div>
 
       <div className={pageStyles.fields}>
-        {mode !== "plan" && (
+        {mode === "goal" && (
           <label className={pageStyles.field}>
             <span className={pageStyles.label}>Target amount ({currency})</span>
             <input
@@ -187,17 +196,19 @@ export default function Simulator() {
           </>
         )}
 
-        <label className={pageStyles.field}>
-          <span className={pageStyles.label}>Starting amount ({currency})</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={startOverride}
-            onChange={(e) => setStartOverride(e.target.value)}
-            placeholder={netWorth ? formatCurrency(netWorthDisplay, currency) : "…"}
-          />
-          <span className={pageStyles.hint}>Blank uses current net worth</span>
-        </label>
+        {mode !== "projection" && (
+          <label className={pageStyles.field}>
+            <span className={pageStyles.label}>Starting amount ({currency})</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={startOverride}
+              onChange={(e) => setStartOverride(e.target.value)}
+              placeholder={netWorth ? formatCurrency(netWorthDisplay, currency) : "…"}
+            />
+            <span className={pageStyles.hint}>Blank uses current net worth</span>
+          </label>
+        )}
 
         {mode === "goal" && (
           <label className={pageStyles.field}>
@@ -212,31 +223,52 @@ export default function Simulator() {
         )}
 
         {mode === "projection" && (
-          <label className={pageStyles.field}>
-            <span className={pageStyles.label}>Based on the last</span>
-            <div className={pageStyles.inlinePair}>
-              <select
-                value={lookbackChoice}
-                onChange={(e) => setLookbackChoice(e.target.value)}
-              >
-                <option value="3">3 months</option>
-                <option value="6">6 months</option>
-                <option value="12">12 months</option>
-                <option value="24">24 months</option>
-                <option value="custom">Custom…</option>
-              </select>
-              {lookbackChoice === "custom" && (
+          <>
+            <label className={pageStyles.field}>
+              <span className={pageStyles.label}>Based on the last</span>
+              <div className={pageStyles.inlinePair}>
+                <select
+                  value={lookbackChoice}
+                  onChange={(e) => setLookbackChoice(e.target.value)}
+                >
+                  <option value="3">3 months</option>
+                  <option value="6">6 months</option>
+                  <option value="12">12 months</option>
+                  <option value="24">24 months</option>
+                  <option value="custom">Custom…</option>
+                </select>
+                {lookbackChoice === "custom" && (
+                  <input
+                    type="number"
+                    min="1"
+                    max={MAX_LOOKBACK}
+                    value={lookbackCustom}
+                    onChange={(e) => setLookbackCustom(e.target.value)}
+                    placeholder="months"
+                  />
+                )}
+              </div>
+            </label>
+            <label className={pageStyles.field}>
+              <span className={pageStyles.label}>Looking ahead</span>
+              <div className={pageStyles.inlinePair}>
                 <input
                   type="number"
                   min="1"
-                  max={MAX_LOOKBACK}
-                  value={lookbackCustom}
-                  onChange={(e) => setLookbackCustom(e.target.value)}
-                  placeholder="months"
+                  value={forward}
+                  onChange={(e) => setForward(e.target.value)}
+                  placeholder="e.g. 12"
                 />
-              )}
-            </div>
-          </label>
+                <select
+                  value={forwardUnit}
+                  onChange={(e) => setForwardUnit(e.target.value as "months" | "years")}
+                >
+                  <option value="months">months</option>
+                  <option value="years">years</option>
+                </select>
+              </div>
+            </label>
+          </>
         )}
       </div>
 
@@ -265,20 +297,22 @@ export default function Simulator() {
           (lookback < 1 ? (
             <p className={styles.placeholder}>Enter a lookback period in months.</p>
           ) : projectionResult === null ? (
-            <p className={styles.placeholder}>Enter a target amount.</p>
-          ) : projectionResult.reached ? (
-            <p className={pageStyles.resultLine}>Target is already covered by the starting amount.</p>
-          ) : projectionResult.months === null ? (
-            <p className={pageStyles.resultLine}>
-              Average savings over this period is {both(projectionResult.monthlyRate)} / month —
-              the target is not reachable at the current rate.
-            </p>
+            <p className={styles.placeholder}>Enter how far ahead to project.</p>
           ) : (
             <>
-              <p className={pageStyles.resultValue}>{projectionResult.date}</p>
+              <p className={pageStyles.resultValue}>
+                {formatCurrency(projectionResult.projected, currency)}
+              </p>
+              <p className={pageStyles.resultAlt}>
+                {formatCurrency(
+                  convert(projectionResult.projected, currency, otherCurrency),
+                  otherCurrency
+                )}
+              </p>
               <p className={pageStyles.resultLine}>
-                About {projectionResult.months} months at the current rate of{" "}
-                {both(projectionResult.monthlyRate)} / month.
+                By {projectionResult.date}, starting from today&apos;s {both(netWorthDisplay)} at
+                the current rate of {both(projectionResult.monthlyRate)} / month over the last{" "}
+                {lookback} months.
               </p>
             </>
           ))}
