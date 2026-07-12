@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import AssetManager from "@/components/AssetManager";
 import CurrencyToggle from "@/components/CurrencyToggle";
 import DateRangeSelector from "@/components/DateRangeSelector";
 import NetWorthChart from "@/components/NetWorthChart";
 import CategoryBreakdown from "@/components/CategoryBreakdown";
 import { formatCurrency, sumInCurrency, type Currency, type CurrencyTotals } from "@/lib/currency";
 import { resolveRange, type RangePreset } from "@/lib/dateRange";
+import type { Asset } from "@/lib/types";
 import styles from "./shared.module.css";
 
 type CategoryBucket = { categoryId: string | null; name: string } & CurrencyTotals;
@@ -24,12 +26,22 @@ export default function Home() {
 
   const [netWorth, setNetWorth] = useState<NetWorthResponse | null>(null);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
+  const [assets, setAssets] = useState<Asset[]>([]);
 
-  useEffect(() => {
+  const loadNetWorth = useCallback(() => {
     fetch("/api/net-worth")
       .then((res) => res.json())
       .then(setNetWorth);
   }, []);
+
+  const loadAssets = useCallback(() => {
+    fetch("/api/assets")
+      .then((res) => res.json())
+      .then(setAssets);
+  }, []);
+
+  useEffect(loadNetWorth, [loadNetWorth]);
+  useEffect(loadAssets, [loadAssets]);
 
   const { from, to } = resolveRange(rangePreset, customRange);
 
@@ -94,6 +106,14 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      <AssetManager
+        assets={assets}
+        onChanged={() => {
+          loadAssets();
+          loadNetWorth();
+        }}
+      />
     </main>
   );
 }
