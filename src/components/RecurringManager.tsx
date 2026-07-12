@@ -189,7 +189,8 @@ export default function RecurringManager({
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Name</th>
+              <th className={styles.nameCol}>Name</th>
+              <th>Type</th>
               <th>Category</th>
               <th className={styles.amount}>Amount</th>
               <th>Frequency</th>
@@ -201,7 +202,16 @@ export default function RecurringManager({
           <tbody>
             {recurring.map((rule) => (
               <tr key={rule.id} className={rule.active ? "" : styles.inactive}>
-                <td>{rule.name}</td>
+                <td className={styles.nameCol}>{rule.name}</td>
+                <td>
+                  {rule.categories ? (
+                    <span className={rule.categories.type === "expense" ? styles.expense : styles.income}>
+                      {rule.categories.type}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td>{rule.categories?.name ?? "No category"}</td>
                 <td className={styles.amount}>{formatCurrency(rule.amount, rule.currency)}</td>
                 <td>{rule.frequency}</td>

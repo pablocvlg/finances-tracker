@@ -25,9 +25,28 @@
   border-bottom: 1px solid var(--border);
 }
 
+.table th,
+.table td {
+  white-space: nowrap;
+}
+
 .table td {
   padding: 0.65rem 0.75rem;
   border-bottom: 1px solid var(--border);
+}
+
+/* The name column absorbs all remaining width; other columns hug their content. */
+.nameCol {
+  width: 100%;
+  white-space: normal;
+}
+
+.expense {
+  color: var(--series-6);
+}
+
+.income {
+  color: var(--series-2);
 }
 
 .amount {
