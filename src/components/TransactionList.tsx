@@ -24,6 +24,7 @@ export default function TransactionList({
           <th>Date</th>
           <th>Type</th>
           <th>Category</th>
+          <th>Asset</th>
           <th className={styles.amountHeader}>Amount</th>
           <th>Description</th>
           <th />
@@ -37,6 +38,7 @@ export default function TransactionList({
               {tx.type}
             </td>
             <td>{tx.categories?.name ?? "Uncategorized"}</td>
+            <td>{tx.assets?.name ?? "—"}</td>
             <td className={styles.amountHeader}>{formatCurrency(tx.amount, tx.currency)}</td>
             <td className={styles.description}>{tx.description}</td>
             <td className={styles.actions}>

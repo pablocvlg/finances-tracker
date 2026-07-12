@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { applyToAsset } from "@/lib/assetOps";
+import type { Currency } from "@/lib/currency";
+
+const SELECT =
+  "id, date, type, category_id, asset_id, amount, currency, description, categories(name), assets(name)";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -8,10 +13,7 @@ export async function GET(request: NextRequest) {
   const from = params.get("from");
   const to = params.get("to");
 
-  let query = supabase
-    .from("transactions")
-    .select("id, date, type, category_id, amount, currency, description, categories(name)")
-    .order("date", { ascending: false });
+  let query = supabase.from("transactions").select(SELECT).order("date", { ascending: false });
 
   if (type) query = query.eq("type", type);
   if (categoryId) query = query.eq("category_id", categoryId);
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { date, type, category_id, amount, currency, description } = body;
+  const { date, type, category_id, asset_id, amount, currency, description } = body;
 
   const { data, error } = await supabase
     .from("transactions")
@@ -34,13 +36,24 @@ export async function POST(request: NextRequest) {
       date,
       type,
       category_id: category_id ?? null,
+      asset_id: asset_id ?? null,
       amount,
       currency,
       description: description ?? null,
     })
-    .select("id, date, type, category_id, amount, currency, description, categories(name)")
+    .select(SELECT)
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (asset_id) {
+    const applyError = await applyToAsset(
+      asset_id,
+      type === "expense" ? -amount : amount,
+      currency as Currency
+    );
+    if (applyError) return NextResponse.json({ error: applyError }, { status: 500 });
+  }
+
   return NextResponse.json(data, { status: 201 });
 }

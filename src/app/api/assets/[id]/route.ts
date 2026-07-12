@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { upsertTodaySnapshot } from "@/lib/assetOps";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,19 +24,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   // Keep the history in sync: a value change writes (or overwrites) today's snapshot.
   if (current_value !== undefined) {
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: existing } = await supabase
-      .from("asset_snapshots")
-      .select("id")
-      .eq("asset_id", id)
-      .eq("date", today)
-      .maybeSingle();
-
-    const snapshotError = existing
-      ? (await supabase.from("asset_snapshots").update({ value: current_value }).eq("id", existing.id)).error
-      : (await supabase.from("asset_snapshots").insert({ asset_id: id, date: today, value: current_value })).error;
-
-    if (snapshotError) return NextResponse.json({ error: snapshotError.message }, { status: 500 });
+    const snapshotError = await upsertTodaySnapshot(id, current_value);
+    if (snapshotError) return NextResponse.json({ error: snapshotError }, { status: 500 });
   }
 
   return NextResponse.json(data);

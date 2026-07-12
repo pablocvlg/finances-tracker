@@ -6,7 +6,7 @@ import RecurringManager from "@/components/RecurringManager";
 import TransactionFilters, { type Filters } from "@/components/TransactionFilters";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionList from "@/components/TransactionList";
-import type { Category, RecurringTransaction, Transaction } from "@/lib/types";
+import type { Asset, Category, RecurringTransaction, Transaction } from "@/lib/types";
 import styles from "../shared.module.css";
 import pageStyles from "./page.module.css";
 
@@ -14,6 +14,7 @@ const emptyFilters: Filters = { type: "", category_id: "", from: "", to: "" };
 
 export default function Transactions() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [recurring, setRecurring] = useState<RecurringTransaction[]>([]);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
@@ -24,6 +25,12 @@ export default function Transactions() {
     fetch("/api/categories")
       .then((res) => res.json())
       .then(setCategories);
+  }, []);
+
+  const loadAssets = useCallback(() => {
+    fetch("/api/assets")
+      .then((res) => res.json())
+      .then(setAssets);
   }, []);
 
   const loadRecurring = useCallback(() => {
@@ -45,6 +52,7 @@ export default function Transactions() {
   }, [filters]);
 
   useEffect(loadCategories, [loadCategories]);
+  useEffect(loadAssets, [loadAssets]);
   useEffect(loadTransactions, [loadTransactions]);
   useEffect(loadRecurring, [loadRecurring]);
 
@@ -55,13 +63,15 @@ export default function Transactions() {
     fetch("/api/recurring/process", { method: "POST" }).then(() => {
       loadTransactions();
       loadRecurring();
+      loadAssets();
     });
-  }, [loadTransactions, loadRecurring]);
+  }, [loadTransactions, loadRecurring, loadAssets]);
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this transaction?")) return;
+    if (!confirm("Delete this transaction? Its effect on the linked asset is undone.")) return;
     await fetch(`/api/transactions/${id}`, { method: "DELETE" });
     loadTransactions();
+    loadAssets();
   }
 
   return (
@@ -72,10 +82,12 @@ export default function Transactions() {
         <div>
           <TransactionForm
             categories={categories}
+            assets={assets}
             editing={editing}
             onSaved={() => {
               setEditing(null);
               loadTransactions();
+              loadAssets();
             }}
             onCancelEdit={() => setEditing(null)}
           />
@@ -90,10 +102,12 @@ export default function Transactions() {
 
           <RecurringManager
             categories={categories}
+            assets={assets}
             recurring={recurring}
             onChanged={() => {
               loadRecurring();
               loadTransactions();
+              loadAssets();
             }}
           />
         </div>

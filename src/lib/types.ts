@@ -14,10 +14,12 @@ export type Transaction = {
   date: string;
   type: TransactionType;
   category_id: string | null;
+  asset_id: string | null;
   amount: number;
   currency: Currency;
   description: string | null;
   categories: { name: string } | null;
+  assets: { name: string } | null;
 };
 
 export type Frequency = "weekly" | "monthly" | "yearly";
@@ -28,10 +30,12 @@ export type RecurringTransaction = {
   amount: number;
   currency: Currency;
   category_id: string | null;
+  asset_id: string | null;
   frequency: Frequency;
   next_date: string;
   active: boolean;
   categories: { name: string; type: TransactionType } | null;
+  assets: { name: string } | null;
 };
 
 export type AssetType = "cash" | "bank" | "stocks" | "other";

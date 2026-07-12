@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-const SELECT = "id, name, amount, currency, category_id, frequency, next_date, active, categories(name, type)";
+const SELECT =
+  "id, name, amount, currency, category_id, asset_id, frequency, next_date, active, categories(name, type), assets(name)";
 
 export async function GET() {
   const { data, error } = await supabase
@@ -15,7 +16,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, amount, currency, category_id, frequency, next_date } = body;
+  const { name, amount, currency, category_id, asset_id, frequency, next_date } = body;
 
   if (!category_id) {
     return NextResponse.json(
@@ -26,7 +27,16 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("recurring_transactions")
-    .insert({ name, amount, currency, category_id, frequency, next_date, active: true })
+    .insert({
+      name,
+      amount,
+      currency,
+      category_id,
+      asset_id: asset_id ?? null,
+      frequency,
+      next_date,
+      active: true,
+    })
     .select(SELECT)
     .single();
 

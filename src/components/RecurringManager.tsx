@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Category, Frequency, RecurringTransaction } from "@/lib/types";
+import type { Asset, Category, Frequency, RecurringTransaction } from "@/lib/types";
 import type { Currency } from "@/lib/currency";
 import { formatCurrency, parseAmount } from "@/lib/currency";
 import styles from "./RecurringManager.module.css";
@@ -14,6 +14,7 @@ function today(): string {
 const emptyForm = {
   name: "",
   category_id: "",
+  asset_id: "",
   amount: "",
   currency: "EUR" as Currency,
   frequency: "monthly" as Frequency,
@@ -22,10 +23,12 @@ const emptyForm = {
 
 export default function RecurringManager({
   categories,
+  assets,
   recurring,
   onChanged,
 }: {
   categories: Category[];
+  assets: Asset[];
   recurring: RecurringTransaction[];
   onChanged: () => void;
 }) {
@@ -37,6 +40,7 @@ export default function RecurringManager({
       setForm({
         name: editing.name,
         category_id: editing.category_id ?? "",
+        asset_id: editing.asset_id ?? "",
         amount: String(editing.amount),
         currency: editing.currency,
         frequency: editing.frequency,
@@ -54,6 +58,7 @@ export default function RecurringManager({
     const payload = {
       name: form.name.trim(),
       category_id: form.category_id,
+      asset_id: form.asset_id || null,
       amount,
       currency: form.currency,
       frequency: form.frequency,
@@ -159,6 +164,22 @@ export default function RecurringManager({
         </select>
         <select
           className={formStyles.select}
+          value={form.asset_id}
+          onChange={(e) => setForm({ ...form, asset_id: e.target.value })}
+          required
+          aria-label="Asset"
+        >
+          <option value="">
+            {assets.length === 0 ? "No assets yet — add one on Home" : "Asset…"}
+          </option>
+          {assets.map((asset) => (
+            <option key={asset.id} value={asset.id}>
+              {asset.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className={formStyles.select}
           value={form.frequency}
           onChange={(e) => setForm({ ...form, frequency: e.target.value as Frequency })}
         >
@@ -192,6 +213,7 @@ export default function RecurringManager({
               <th className={styles.nameCol}>Name</th>
               <th>Type</th>
               <th>Category</th>
+              <th>Asset</th>
               <th className={styles.amount}>Amount</th>
               <th>Frequency</th>
               <th>Next</th>
@@ -213,6 +235,7 @@ export default function RecurringManager({
                   )}
                 </td>
                 <td>{rule.categories?.name ?? "No category"}</td>
+                <td>{rule.assets?.name ?? "—"}</td>
                 <td className={styles.amount}>{formatCurrency(rule.amount, rule.currency)}</td>
                 <td>{rule.frequency}</td>
                 <td>{rule.next_date}</td>

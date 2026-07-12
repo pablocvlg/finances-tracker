@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { advanceDate } from "@/lib/recurrence";
+import { applyToAsset } from "@/lib/assetOps";
+import type { Currency } from "@/lib/currency";
 import type { Frequency, TransactionType } from "@/lib/types";
 
 export async function POST() {
@@ -8,7 +10,7 @@ export async function POST() {
 
   const { data: due, error } = await supabase
     .from("recurring_transactions")
-    .select("id, name, amount, currency, category_id, frequency, next_date, categories(type)")
+    .select("id, name, amount, currency, category_id, asset_id, frequency, next_date, categories(type)")
     .eq("active", true)
     .lte("next_date", today);
 
@@ -27,6 +29,7 @@ export async function POST() {
         date,
         type,
         category_id: rule.category_id,
+        asset_id: rule.asset_id,
         amount: rule.amount,
         currency: rule.currency,
         description: rule.name,
@@ -46,6 +49,16 @@ export async function POST() {
       .eq("id", rule.id);
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    if (rule.asset_id) {
+      const sign = type === "expense" ? -1 : 1;
+      const applyError = await applyToAsset(
+        rule.asset_id,
+        sign * rule.amount * inserts.length,
+        rule.currency as Currency
+      );
+      if (applyError) return NextResponse.json({ error: applyError }, { status: 500 });
     }
 
     generated += inserts.length;

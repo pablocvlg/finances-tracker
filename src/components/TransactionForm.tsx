@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Category, Transaction, TransactionType } from "@/lib/types";
+import type { Asset, Category, Transaction, TransactionType } from "@/lib/types";
 import { parseAmount, type Currency } from "@/lib/currency";
 import styles from "./TransactionForm.module.css";
 
@@ -13,6 +13,7 @@ const emptyForm = {
   date: today(),
   type: "expense" as TransactionType,
   category_id: "",
+  asset_id: "",
   amount: "",
   currency: "EUR" as Currency,
   description: "",
@@ -20,11 +21,13 @@ const emptyForm = {
 
 export default function TransactionForm({
   categories,
+  assets,
   editing,
   onSaved,
   onCancelEdit,
 }: {
   categories: Category[];
+  assets: Asset[];
   editing: Transaction | null;
   onSaved: () => void;
   onCancelEdit: () => void;
@@ -37,6 +40,7 @@ export default function TransactionForm({
         date: editing.date,
         type: editing.type,
         category_id: editing.category_id ?? "",
+        asset_id: editing.asset_id ?? "",
         amount: String(editing.amount),
         currency: editing.currency,
         description: editing.description ?? "",
@@ -56,6 +60,7 @@ export default function TransactionForm({
       date: form.date,
       type: form.type,
       category_id: form.category_id || null,
+      asset_id: form.asset_id || null,
       amount,
       currency: form.currency,
       description: form.description || null,
@@ -126,6 +131,22 @@ export default function TransactionForm({
       >
         <option value="EUR">EUR</option>
         <option value="DKK">DKK</option>
+      </select>
+      <select
+        className={styles.select}
+        value={form.asset_id}
+        onChange={(e) => setForm({ ...form, asset_id: e.target.value })}
+        required
+        aria-label="Asset"
+      >
+        <option value="">
+          {assets.length === 0 ? "No assets yet — add one on Home" : "Asset…"}
+        </option>
+        {assets.map((asset) => (
+          <option key={asset.id} value={asset.id}>
+            {asset.name}
+          </option>
+        ))}
       </select>
       <input
         type="text"
