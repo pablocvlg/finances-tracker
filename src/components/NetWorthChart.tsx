@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatCurrency, sumInCurrency, type Currency } from "@/lib/currency";
+import { formatCompact, formatCurrency, sumInCurrency, type Currency } from "@/lib/currency";
 import styles from "./Charts.module.css";
 
 type HistoryPoint = { date: string; EUR: number; DKK: number };
@@ -45,9 +45,7 @@ export default function NetWorthChart({
           tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
           tickLine={false}
           width={64}
-          tickFormatter={(value) =>
-            new Intl.NumberFormat("en", { notation: "compact" }).format(value)
-          }
+          tickFormatter={formatCompact}
         />
         <Tooltip
           formatter={(value) => formatCurrency(Number(value), currency)}

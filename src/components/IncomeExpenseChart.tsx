@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatCurrency, sumInCurrency, type Currency } from "@/lib/currency";
+import { formatCompact, formatCurrency, sumInCurrency, type Currency } from "@/lib/currency";
 import type { TrendMonth } from "./MonthlySpendChart";
 import styles from "./Charts.module.css";
 
@@ -46,9 +46,7 @@ export default function IncomeExpenseChart({
           tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
           tickLine={false}
           width={64}
-          tickFormatter={(value) =>
-            new Intl.NumberFormat("en", { notation: "compact" }).format(value)
-          }
+          tickFormatter={formatCompact}
         />
         <Tooltip
           formatter={(value) => formatCurrency(Number(value), currency)}
