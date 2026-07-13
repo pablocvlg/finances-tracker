@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import CurrencyToggle from "@/components/CurrencyToggle";
 import { convert, formatCurrency, parseAmount, type Currency } from "@/lib/currency";
-import type { Investment, Quote } from "@/lib/types";
+import type { Asset, Investment, Quote } from "@/lib/types";
 import styles from "../shared.module.css";
 import pageStyles from "./page.module.css";
 import formStyles from "@/components/TransactionForm.module.css";
@@ -16,6 +16,15 @@ const emptyForm = {
   buy_currency: "EUR" as "EUR" | "DKK" | "USD",
 };
 
+const emptySellForm = {
+  date: new Date().toISOString().slice(0, 10),
+  quantity: "",
+  price: "",
+  currency: "EUR" as Currency,
+  fee: "",
+  asset_id: "",
+};
+
 export default function Investments() {
   const [currency, setCurrency] = useState<Currency>("EUR");
   const [holdings, setHoldings] = useState<Investment[]>([]);
@@ -23,6 +32,10 @@ export default function Investments() {
   const [loadingQuotes, setLoadingQuotes] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<Investment | null>(null);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [selling, setSelling] = useState<Investment | null>(null);
+  const [sellForm, setSellForm] = useState(emptySellForm);
+  const [sellError, setSellError] = useState<string | null>(null);
 
   const loadHoldings = useCallback(() => {
     fetch("/api/investments")
@@ -31,6 +44,12 @@ export default function Investments() {
   }, []);
 
   useEffect(loadHoldings, [loadHoldings]);
+
+  useEffect(() => {
+    fetch("/api/assets")
+      .then((res) => res.json())
+      .then(setAssets);
+  }, []);
 
   // Live prices refresh on every visit and whenever holdings change.
   useEffect(() => {
@@ -93,6 +112,53 @@ export default function Investments() {
   async function handleDelete(id: string) {
     if (!confirm("Delete this holding?")) return;
     await fetch(`/api/investments/${id}`, { method: "DELETE" });
+    loadHoldings();
+  }
+
+  function startSelling(holding: Investment) {
+    const quote = quotes.get(holding.symbol);
+    const quoteInAppCurrency =
+      quote?.price != null && (quote.currency === "EUR" || quote.currency === "DKK");
+    setSelling(holding);
+    setSellError(null);
+    setSellForm({
+      ...emptySellForm,
+      quantity: String(holding.quantity),
+      price: quoteInAppCurrency ? String(quote.price) : "",
+      currency: quoteInAppCurrency ? (quote.currency as Currency) : "EUR",
+    });
+  }
+
+  async function handleSell(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selling) return;
+    const quantity = parseAmount(sellForm.quantity);
+    const price = parseAmount(sellForm.price);
+    const fee = parseAmount(sellForm.fee);
+    if (isNaN(quantity) || isNaN(price) || !sellForm.asset_id) return;
+
+    const res = await fetch(`/api/investments/${selling.id}/sell`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: sellForm.date,
+        quantity,
+        price,
+        currency: sellForm.currency,
+        fee: !isNaN(fee) && fee > 0 ? fee : 0,
+        asset_id: sellForm.asset_id,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setSellError(body?.error ?? `Sale failed (HTTP ${res.status})`);
+      return;
+    }
+
+    setSelling(null);
+    setSellForm(emptySellForm);
+    setSellError(null);
     loadHoldings();
   }
 
@@ -176,6 +242,78 @@ export default function Investments() {
         )}
       </form>
 
+      {selling && (
+        <form className={formStyles.form} onSubmit={handleSell}>
+          <span className={pageStyles.sellLabel}>Sell {selling.symbol}</span>
+          <input
+            type="date"
+            className={formStyles.input}
+            value={sellForm.date}
+            onChange={(e) => setSellForm({ ...sellForm, date: e.target.value })}
+            required
+          />
+          <input
+            type="text"
+            inputMode="decimal"
+            className={formStyles.fee}
+            placeholder={`Qty (max ${selling.quantity})`}
+            title={`Quantity to sell, up to ${selling.quantity}`}
+            value={sellForm.quantity}
+            onChange={(e) => setSellForm({ ...sellForm, quantity: e.target.value })}
+            required
+          />
+          <input
+            type="text"
+            inputMode="decimal"
+            className={formStyles.amount}
+            placeholder="Price / unit"
+            value={sellForm.price}
+            onChange={(e) => setSellForm({ ...sellForm, price: e.target.value })}
+            required
+          />
+          <select
+            className={formStyles.select}
+            value={sellForm.currency}
+            onChange={(e) => setSellForm({ ...sellForm, currency: e.target.value as Currency })}
+          >
+            <option value="EUR">EUR</option>
+            <option value="DKK">DKK</option>
+          </select>
+          <input
+            type="text"
+            inputMode="decimal"
+            className={formStyles.fee}
+            placeholder="Fee"
+            title="Optional broker fee, in the sale currency"
+            value={sellForm.fee}
+            onChange={(e) => setSellForm({ ...sellForm, fee: e.target.value })}
+          />
+          <select
+            className={formStyles.select}
+            value={sellForm.asset_id}
+            onChange={(e) => setSellForm({ ...sellForm, asset_id: e.target.value })}
+            required
+            aria-label="Credit proceeds to"
+          >
+            <option value="">
+              {assets.length === 0 ? "No assets yet — add one on Home" : "Credit to…"}
+            </option>
+            {assets.map((asset) => (
+              <option key={asset.id} value={asset.id}>
+                {asset.name}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className={formStyles.submit}>
+            Sell
+          </button>
+          <button type="button" className={formStyles.cancel} onClick={() => setSelling(null)}>
+            Cancel
+          </button>
+          {sellError && <span className={pageStyles.error}>{sellError}</span>}
+        </form>
+      )}
+
       {holdings.length === 0 ? (
         <p className={styles.placeholder}>
           No holdings yet. Add a stock or ETF by its Yahoo Finance ticker.
@@ -239,6 +377,9 @@ export default function Investments() {
                     {value != null ? formatCurrency(value, currency) : "—"}
                   </td>
                   <td className={pageStyles.actions}>
+                    <button type="button" onClick={() => startSelling(holding)}>
+                      Sell
+                    </button>
                     <button type="button" onClick={() => setEditing(holding)}>
                       Edit
                     </button>
