@@ -61,7 +61,11 @@ export default function NetWorthChart({
           dataKey="value"
           stroke="var(--series-net-worth)"
           strokeWidth={2}
-          dot={{ r: 4, stroke: "var(--background)", strokeWidth: 2, fill: "var(--series-net-worth)" }}
+          dot={
+            data.length <= 45
+              ? { r: 4, stroke: "var(--background)", strokeWidth: 2, fill: "var(--series-net-worth)" }
+              : false
+          }
           activeDot={{ r: 5 }}
         />
       </LineChart>
