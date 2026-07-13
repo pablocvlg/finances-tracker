@@ -7,6 +7,7 @@ import styles from "./Nav.module.css";
 const links = [
   { href: "/", label: "Home" },
   { href: "/transactions", label: "Transactions" },
+  { href: "/investments", label: "Investments" },
   { href: "/simulator", label: "Simulator" },
 ];
 

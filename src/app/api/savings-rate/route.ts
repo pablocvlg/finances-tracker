@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   const { data: transactions, error } = await supabase
     .from("transactions")
-    .select("date, type, amount, currency")
+    .select("date, type, amount, fee, currency")
     .gte("date", from)
     .lt("date", currentMonthStart);
 
@@ -29,8 +29,10 @@ export async function GET(request: NextRequest) {
   for (const tx of transactions ?? []) {
     const bucket = byMonth.get(tx.date.slice(0, 7));
     if (!bucket) continue;
-    const sign = tx.type === "income" ? 1 : -1;
-    bucket[tx.currency as Currency] += sign * tx.amount;
+    // Exchange principal is neutral for savings; fees always cost money.
+    const principal =
+      tx.type === "income" ? tx.amount : tx.type === "expense" ? -tx.amount : 0;
+    bucket[tx.currency as Currency] += principal - tx.fee;
   }
 
   const history = Array.from(byMonth.entries()).map(([month, net]) => ({ month, net }));

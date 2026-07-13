@@ -45,6 +45,12 @@
   color: var(--series-6);
 }
 
+.fee {
+  color: var(--foreground-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
 .income {
   color: var(--series-2);
 }

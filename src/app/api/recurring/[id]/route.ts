@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 const SELECT =
-  "id, name, amount, currency, category_id, asset_id, frequency, next_date, active, categories(name, type), assets(name)";
+  "id, name, amount, fee, currency, category_id, asset_id, frequency, next_date, active, categories(name, type), assets(name)";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await request.json();
-  const { name, amount, currency, category_id, asset_id, frequency, next_date, active } = body;
+  const { name, amount, fee, currency, category_id, asset_id, frequency, next_date, active } = body;
 
   const update: Record<string, unknown> = {};
   if (name !== undefined) update.name = name;
   if (amount !== undefined) update.amount = amount;
+  if (fee !== undefined) update.fee = fee;
   if (currency !== undefined) update.currency = currency;
   if (category_id !== undefined) update.category_id = category_id;
   if (asset_id !== undefined) update.asset_id = asset_id;

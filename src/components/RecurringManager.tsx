@@ -16,6 +16,7 @@ const emptyForm = {
   category_id: "",
   asset_id: "",
   amount: "",
+  fee: "",
   currency: "EUR" as Currency,
   frequency: "monthly" as Frequency,
   next_date: today(),
@@ -42,6 +43,7 @@ export default function RecurringManager({
         category_id: editing.category_id ?? "",
         asset_id: editing.asset_id ?? "",
         amount: String(editing.amount),
+        fee: editing.fee > 0 ? String(editing.fee) : "",
         currency: editing.currency,
         frequency: editing.frequency,
         next_date: editing.next_date,
@@ -55,11 +57,13 @@ export default function RecurringManager({
     e.preventDefault();
     const amount = parseAmount(form.amount);
     if (isNaN(amount)) return;
+    const fee = parseAmount(form.fee);
     const payload = {
       name: form.name.trim(),
       category_id: form.category_id,
       asset_id: form.asset_id || null,
       amount,
+      fee: !isNaN(fee) && fee > 0 ? fee : 0,
       currency: form.currency,
       frequency: form.frequency,
       next_date: form.next_date,
@@ -154,6 +158,15 @@ export default function RecurringManager({
           onChange={(e) => setForm({ ...form, amount: e.target.value })}
           required
         />
+        <input
+          type="text"
+          inputMode="decimal"
+          className={formStyles.fee}
+          placeholder="Fee"
+          title="Optional fee, in the rule's currency"
+          value={form.fee}
+          onChange={(e) => setForm({ ...form, fee: e.target.value })}
+        />
         <select
           className={formStyles.select}
           value={form.currency}
@@ -236,7 +249,12 @@ export default function RecurringManager({
                 </td>
                 <td>{rule.categories?.name ?? "No category"}</td>
                 <td>{rule.assets?.name ?? "—"}</td>
-                <td className={styles.amount}>{formatCurrency(rule.amount, rule.currency)}</td>
+                <td className={styles.amount}>
+                  {formatCurrency(rule.amount, rule.currency)}
+                  {rule.fee > 0 && (
+                    <span className={styles.fee}> +{formatCurrency(rule.fee, rule.currency)} fee</span>
+                  )}
+                </td>
                 <td>{rule.frequency}</td>
                 <td>{rule.next_date}</td>
                 <td>

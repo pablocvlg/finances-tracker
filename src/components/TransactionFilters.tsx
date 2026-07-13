@@ -1,10 +1,10 @@
 "use client";
 
-import type { Category, TransactionType } from "@/lib/types";
+import type { Category, TransactionKind } from "@/lib/types";
 import styles from "./TransactionFilters.module.css";
 
 export type Filters = {
-  type: TransactionType | "";
+  type: TransactionKind | "";
   category_id: string;
   from: string;
   to: string;
@@ -25,12 +25,13 @@ export default function TransactionFilters({
         className={styles.select}
         value={filters.type}
         onChange={(e) =>
-          onChange({ ...filters, type: e.target.value as TransactionType | "", category_id: "" })
+          onChange({ ...filters, type: e.target.value as TransactionKind | "", category_id: "" })
         }
       >
         <option value="">All types</option>
         <option value="expense">Expense</option>
         <option value="income">Income</option>
+        <option value="exchange">Exchange</option>
       </select>
       <select
         className={styles.select}

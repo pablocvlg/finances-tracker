@@ -17,13 +17,14 @@ export async function upsertTodaySnapshot(assetId: string, value: number): Promi
   return error?.message ?? null;
 }
 
-// Applies a signed amount (in the transaction's currency) to an asset's
-// current value, converting across EUR/DKK when they differ, and records
-// today's snapshot so net worth history follows.
+// Applies a signed amount to an asset's current value and records today's
+// snapshot so net worth history follows. When `currency` is given the amount
+// is converted into the asset's currency at the fixed rate; when null the
+// amount is already in the asset's own currency.
 export async function applyToAsset(
   assetId: string,
   amount: number,
-  currency: Currency
+  currency: Currency | null
 ): Promise<string | null> {
   const { data: asset, error: assetError } = await supabase
     .from("assets")
@@ -33,7 +34,8 @@ export async function applyToAsset(
   if (assetError) return assetError.message;
   if (!asset) return null; // asset was deleted; nothing to move
 
-  const newValue = asset.current_value + convert(amount, currency, asset.currency as Currency);
+  const delta = currency ? convert(amount, currency, asset.currency as Currency) : amount;
+  const newValue = asset.current_value + delta;
   const { error } = await supabase
     .from("assets")
     .update({ current_value: newValue, updated_at: new Date().toISOString() })

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 const SELECT =
-  "id, name, amount, currency, category_id, asset_id, frequency, next_date, active, categories(name, type), assets(name)";
+  "id, name, amount, fee, currency, category_id, asset_id, frequency, next_date, active, categories(name, type), assets(name)";
 
 export async function GET() {
   const { data, error } = await supabase
@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, amount, currency, category_id, asset_id, frequency, next_date } = body;
+  const { name, amount, fee, currency, category_id, asset_id, frequency, next_date } = body;
 
   if (!category_id) {
     return NextResponse.json(
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     .insert({
       name,
       amount,
+      fee: fee ?? 0,
       currency,
       category_id,
       asset_id: asset_id ?? null,

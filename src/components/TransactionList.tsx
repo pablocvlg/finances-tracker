@@ -34,12 +34,29 @@ export default function TransactionList({
         {transactions.map((tx) => (
           <tr key={tx.id}>
             <td>{tx.date}</td>
-            <td className={tx.type === "expense" ? styles.expense : styles.income}>
+            <td
+              className={
+                tx.type === "expense"
+                  ? styles.expense
+                  : tx.type === "income"
+                    ? styles.income
+                    : styles.exchange
+              }
+            >
               {tx.type}
             </td>
-            <td>{tx.categories?.name ?? "Uncategorized"}</td>
-            <td>{tx.assets?.name ?? "—"}</td>
-            <td className={styles.amountHeader}>{formatCurrency(tx.amount, tx.currency)}</td>
+            <td>{tx.type === "exchange" ? "—" : (tx.categories?.name ?? "Uncategorized")}</td>
+            <td>
+              {tx.type === "exchange"
+                ? `${tx.assets?.name ?? "—"} → ${tx.to_assets?.name ?? "—"}`
+                : (tx.assets?.name ?? "—")}
+            </td>
+            <td className={styles.amountHeader}>
+              {formatCurrency(tx.amount, tx.currency)}
+              {tx.fee > 0 && (
+                <span className={styles.fee}> +{formatCurrency(tx.fee, tx.currency)} fee</span>
+              )}
+            </td>
             <td className={styles.description}>{tx.description}</td>
             <td className={styles.actions}>
               <button type="button" onClick={() => onEdit(tx)}>

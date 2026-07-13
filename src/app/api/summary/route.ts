@@ -8,11 +8,6 @@ function emptyTotals(): CurrencyTotals {
 
 type CategoryBucket = { categoryId: string | null; name: string } & CurrencyTotals;
 
-type Section = {
-  total: CurrencyTotals;
-  byCategory: CategoryBucket[];
-};
-
 export async function GET(request: NextRequest) {
   const from = request.nextUrl.searchParams.get("from");
   const to = request.nextUrl.searchParams.get("to");
@@ -23,40 +18,44 @@ export async function GET(request: NextRequest) {
 
   const { data: transactions, error } = await supabase
     .from("transactions")
-    .select("type, amount, currency, category_id, categories(name)")
+    .select("type, amount, fee, currency, category_id, categories(name)")
     .gte("date", from)
     .lte("date", to);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const expenseTotal = emptyTotals();
+  const incomeTotal = emptyTotals();
+  const expenseCategories = new Map<string, CategoryBucket>();
+  const incomeCategories = new Map<string, CategoryBucket>();
+
+  function add(map: Map<string, CategoryBucket>, key: string, name: string, categoryId: string | null, currency: Currency, amount: number) {
+    const bucket = map.get(key) ?? { categoryId, name, ...emptyTotals() };
+    bucket[currency] += amount;
+    map.set(key, bucket);
   }
 
-  function buildSection(type: "income" | "expense"): Section {
-    const total = emptyTotals();
-    const categories = new Map<string, CategoryBucket>();
+  for (const tx of transactions ?? []) {
+    const currency = tx.currency as Currency;
+    const name = (tx.categories as unknown as { name: string } | null)?.name ?? "Uncategorized";
 
-    for (const tx of transactions ?? []) {
-      if (tx.type !== type) continue;
-      const currency = tx.currency as Currency;
-      total[currency] += tx.amount;
-
-      const key = tx.category_id ?? "uncategorized";
-      const name =
-        (tx.categories as unknown as { name: string } | null)?.name ?? "Uncategorized";
-      const bucket = categories.get(key) ?? {
-        categoryId: tx.category_id,
-        name,
-        ...emptyTotals(),
-      };
-      bucket[currency] += tx.amount;
-      categories.set(key, bucket);
+    if (tx.type === "expense") {
+      expenseTotal[currency] += tx.amount;
+      add(expenseCategories, tx.category_id ?? "uncategorized", name, tx.category_id, currency, tx.amount);
+    } else if (tx.type === "income") {
+      incomeTotal[currency] += tx.amount;
+      add(incomeCategories, tx.category_id ?? "uncategorized", name, tx.category_id, currency, tx.amount);
     }
 
-    return { total, byCategory: Array.from(categories.values()) };
+    // Fees on any transaction (incl. exchanges) count as spend, under one bucket.
+    if (tx.fee > 0) {
+      expenseTotal[currency] += tx.fee;
+      add(expenseCategories, "fees", "Fees", null, currency, tx.fee);
+    }
   }
 
   return NextResponse.json({
-    expense: buildSection("expense"),
-    income: buildSection("income"),
+    expense: { total: expenseTotal, byCategory: Array.from(expenseCategories.values()) },
+    income: { total: incomeTotal, byCategory: Array.from(incomeCategories.values()) },
   });
 }

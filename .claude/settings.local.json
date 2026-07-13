@@ -32,11 +32,19 @@
       "Bash(mkdir -p \"e:/Projects/Finances Tracker/src/app/api/recurring/[id]\" \"e:/Projects/Finances Tracker/src/app/api/recurring/process\" \"e:/Projects/Finances Tracker/src/app/api/assets/[id]\" \"e:/Projects/Finances Tracker/src/app/api/savings-rate\" \"e:/Projects/Finances Tracker/src/app/api/trends\")",
       "Bash(git commit -q -m ' *)",
       "Bash(node -e ' *)",
-      "Bash(curl -s \"http://localhost:3000\" -o /dev/null -w \"\")"
+      "Bash(curl -s \"http://localhost:3000\" -o /dev/null -w \"\")",
+      "Bash(curl -s --max-time 10 -H \"User-Agent: Mozilla/5.0\" \"https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=1d&interval=1d\")",
+      "Bash(curl -s --max-time 10 \"https://api.frankfurter.app/latest?from=USD&to=EUR,DKK\")",
+      "Bash(curl -s --max-time 10 \"https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR,DKK\")",
+      "Bash(curl -s --max-time 10 -H \"User-Agent: Mozilla/5.0\" \"https://query1.finance.yahoo.com/v8/finance/chart/VWCE.DE?range=1d&interval=1d\")",
+      "Bash(cd \"e:/Projects/Finances Tracker\" && sed -i 's/\"id, name, amount, currency, category_id, asset_id, frequency, next_date, active, categories\\(name, type\\), assets\\(name\\)\"/\"id, name, amount, fee, currency, category_id, asset_id, frequency, next_date, active, categories\\(name, type\\), assets\\(name\\)\"/' src/app/api/recurring/route.ts \"src/app/api/recurring/[id]/route.ts\" && grep -n \"fee\" src/app/api/recurring/route.ts \"src/app/api/recurring/[id]/route.ts\" | head)",
+      "Bash(mkdir -p \"e:/Projects/Finances Tracker/src/app/api/investments/[id]\" \"e:/Projects/Finances Tracker/src/app/api/investments/quotes\" \"e:/Projects/Finances Tracker/src/app/investments\")"
     ],
     "additionalDirectories": [
       "e:\\Projects\\Finances Tracker\\src\\app\\api\\categories",
-      "e:\\Projects\\Finances Tracker\\src\\app\\api\\recurring"
+      "e:\\Projects\\Finances Tracker\\src\\app\\api\\recurring",
+      "E:\\Projects\\Finances Tracker\\src\\app\\api\\recurring\\[id]",
+      "e:\\Projects\\Finances Tracker\\src\\app\\api\\investments"
     ]
   }
 }

@@ -10,7 +10,7 @@ export async function POST() {
 
   const { data: due, error } = await supabase
     .from("recurring_transactions")
-    .select("id, name, amount, currency, category_id, asset_id, frequency, next_date, categories(type)")
+    .select("id, name, amount, fee, currency, category_id, asset_id, frequency, next_date, categories(type)")
     .eq("active", true)
     .lte("next_date", today);
 
@@ -31,6 +31,7 @@ export async function POST() {
         category_id: rule.category_id,
         asset_id: rule.asset_id,
         amount: rule.amount,
+        fee: rule.fee,
         currency: rule.currency,
         description: rule.name,
         recurring_id: rule.id,
@@ -52,10 +53,10 @@ export async function POST() {
     }
 
     if (rule.asset_id) {
-      const sign = type === "expense" ? -1 : 1;
+      const net = type === "expense" ? -(rule.amount + rule.fee) : rule.amount - rule.fee;
       const applyError = await applyToAsset(
         rule.asset_id,
-        sign * rule.amount * inserts.length,
+        net * inserts.length,
         rule.currency as Currency
       );
       if (applyError) return NextResponse.json({ error: applyError }, { status: 500 });
