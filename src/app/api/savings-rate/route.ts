@@ -7,23 +7,24 @@ export async function GET(request: NextRequest) {
   const monthsParam = parseInt(request.nextUrl.searchParams.get("months") ?? "6", 10);
   const months = Math.min(Math.max(monthsParam, 1), 60);
 
-  // Only complete months: from the 1st of (current month - N) through the last
-  // day of the previous month, so a half-elapsed current month doesn't skew the rate.
+  // Rolling window: exactly the last N months through today, so recent
+  // transactions count immediately. The window is always exactly N months
+  // long, so dividing the total by N is not skewed by partial months.
   const today = new Date().toISOString().slice(0, 10);
-  const currentMonthStart = today.slice(0, 7) + "-01";
-  const from = addMonths(currentMonthStart, -months);
+  const from = addMonths(today, -months);
 
   const { data: transactions, error } = await supabase
     .from("transactions")
     .select("date, type, amount, fee, currency")
-    .gte("date", from)
-    .lt("date", currentMonthStart);
+    .gt("date", from)
+    .lte("date", today);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Calendar-month buckets for the history; the first and last may be partial.
   const byMonth = new Map<string, CurrencyTotals>();
-  for (let i = 0; i < months; i++) {
-    byMonth.set(addMonths(from, i).slice(0, 7), { EUR: 0, DKK: 0 });
+  for (let m = from.slice(0, 7); m <= today.slice(0, 7); m = addMonths(m + "-01", 1).slice(0, 7)) {
+    byMonth.set(m, { EUR: 0, DKK: 0 });
   }
 
   for (const tx of transactions ?? []) {
